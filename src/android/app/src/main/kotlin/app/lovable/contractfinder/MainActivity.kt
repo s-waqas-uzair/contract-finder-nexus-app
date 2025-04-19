@@ -10,8 +10,12 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.SearchView
+import android.os.Build
+import android.os.Environment
+import android.provider.Settings
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
@@ -20,12 +24,14 @@ import app.lovable.contractfinder.databinding.ActivityMainBinding
 import app.lovable.contractfinder.model.ContractRecord
 import app.lovable.contractfinder.viewmodel.ContractViewModel
 import com.google.android.material.snackbar.Snackbar
+import android.util.Log
 
 class MainActivity : AppCompatActivity() {
     
     private lateinit var binding: ActivityMainBinding
     private lateinit var viewModel: ContractViewModel
     private lateinit var adapter: ContractListAdapter
+    private  val MANAGE_EXTERNAL_STORAGE_REQUEST_CODE = 1001
     
     private val requestPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -44,7 +50,26 @@ class MainActivity : AppCompatActivity() {
             ).show()
         }
     }
-    
+    @RequiresApi(Build.VERSION_CODES.R)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == MANAGE_EXTERNAL_STORAGE_REQUEST_CODE) {
+            if (Environment.isExternalStorageManager()) {
+                // If permission is granted, open the file picker
+                openFilePicker()
+            } else {
+                // Show a message if permission is denied
+                Snackbar.make(
+                    binding.root,
+                    "Permission denied. Cannot access files.",
+                    Snackbar.LENGTH_LONG
+                ).show()
+            }
+        }
+    }
+
+
     private val getContent = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
         uri?.let { importCsv(it) }
     }
@@ -167,35 +192,71 @@ class MainActivity : AppCompatActivity() {
             binding.resultsCount.visibility = View.GONE
         }
     }
-    
+
+
     private fun checkPermissionAndOpenFilePicker() {
+        Log.d("FilePicker", "checkPermissionAndOpenFilePicker called")
+
         when {
+            // For Android 11 and later, check for MANAGE_EXTERNAL_STORAGE permission
+            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+                Log.d("FilePicker", "Android 11 or later detected")
+                if (!Environment.isExternalStorageManager()) {
+                    Log.d("FilePicker", "MANAGE_EXTERNAL_STORAGE permission is not granted")
+                    // If the app doesn't have access to all files, request permission
+                    val intent = Intent(Settings.ACTION_MANAGE_APP_ALL_FILES_ACCESS_PERMISSION)
+                    // Check if there is an activity that can handle this intent
+                    if (intent.resolveActivity(packageManager) != null) {
+                        Log.d("FilePicker", "Activity found to handle MANAGE_APP_ALL_FILES_ACCESS_PERMISSION intent")
+                        startActivityForResult(intent, MANAGE_EXTERNAL_STORAGE_REQUEST_CODE)
+                    } else {
+                        // Handle the case where there is no activity to handle the intent
+                        Log.e("FilePicker", "No activity found to handle the MANAGE_APP_ALL_FILES_ACCESS_PERMISSION intent.")
+                        // Optionally, show a message or provide fallback behavior
+                    }
+                } else {
+                    Log.d("FilePicker", "MANAGE_EXTERNAL_STORAGE permission already granted")
+                    // If permission is granted, proceed to open file picker
+                    openFilePicker()
+                }
+            }
+            // For Android 10 and below, check for READ_EXTERNAL_STORAGE permission
             ContextCompat.checkSelfPermission(
                 this,
                 Manifest.permission.READ_EXTERNAL_STORAGE
             ) == PackageManager.PERMISSION_GRANTED -> {
+                Log.d("FilePicker", "READ_EXTERNAL_STORAGE permission granted for Android 10 and below")
+                // If permission is granted, proceed with file picker
                 openFilePicker()
             }
             ActivityCompat.shouldShowRequestPermissionRationale(
                 this,
                 Manifest.permission.READ_EXTERNAL_STORAGE
             ) -> {
+                Log.d("FilePicker", "User has previously denied READ_EXTERNAL_STORAGE permission")
+                // If the user has previously denied permission, explain why it's needed
                 Snackbar.make(
                     binding.root,
                     "Storage permission is needed to import CSV files",
                     Snackbar.LENGTH_INDEFINITE
                 )
                     .setAction("Grant") {
+                        Log.d("FilePicker", "Requesting READ_EXTERNAL_STORAGE permission from user")
                         requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
                     }
                     .show()
             }
             else -> {
+                Log.d("FilePicker", "Requesting READ_EXTERNAL_STORAGE permission for the first time")
+                // Request the permission if it's not granted
                 requestPermissionLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE)
             }
         }
     }
-    
+
+
+
+
     private fun openFilePicker() {
         getContent.launch("text/csv")
     }

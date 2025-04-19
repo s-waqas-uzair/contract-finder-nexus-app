@@ -16,53 +16,53 @@ import org.apache.commons.csv.CSVParser
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.collections.ArrayList
+import android.util.Log
 
 object CsvParser {
-    
+
     /**
-     * Parses a CSV file from the given URI
-     * Uses Apache Commons CSV for reliable parsing of large files
+     * Parses a CSV file from the given URI.
+     * Uses Apache Commons CSV for reliable parsing of large files.
      */
     fun parseCsvFromUri(contentResolver: ContentResolver, uri: Uri): List<ContractRecord> {
         val records = ArrayList<ContractRecord>()
-        
-        contentResolver.openInputStream(uri)?.use { inputStream ->
-            val reader = BufferedReader(InputStreamReader(inputStream))
-            
-            val csvParser = CSVParser(reader, CSVFormat.DEFAULT
-                .withFirstRecordAsHeader()
-                .withIgnoreHeaderCase()
-                .withTrim()
-            )
-            
-            for (csvRecord in csvParser) {
-                val contract = csvRecord.get(HEADER_CONTRACT) ?: ""
-                val contractAccount = csvRecord.get(HEADER_CONTRACT_ACCOUNT) ?: ""
-                val ibcName = csvRecord.get(HEADER_IBC_NAME) ?: ""
-                val portfolio = csvRecord.get(HEADER_PORTFOLIO) ?: ""
-                val cbOffer = csvRecord.get(HEADER_CB_OFFER) ?: ""
-                val rebateOffer = csvRecord.get(HEADER_REBATE_OFFER) ?: ""
-                val pwoScheme = csvRecord.get(HEADER_PWO_SCHEME) ?: ""
-                
-                val record = ContractRecord(
-                    contract = contract,
-                    contractAccount = contractAccount,
-                    ibcName = ibcName,
-                    portfolio = portfolio,
-                    cbOffer = cbOffer,
-                    rebateOffer = rebateOffer,
-                    pwoScheme = pwoScheme
+
+        try {
+            contentResolver.openInputStream(uri)?.use { inputStream ->
+                val reader = BufferedReader(InputStreamReader(inputStream))
+
+                val csvParser = CSVParser(reader, CSVFormat.DEFAULT
+                    .withFirstRecordAsHeader()
+                    .withIgnoreHeaderCase()
+                    .withTrim()
                 )
-                
-                records.add(record)
-                
-                // Optional: implement batch processing for extremely large files
-                // if (records.size % 10000 == 0) {
-                //     // Process in batches of 10,000
-                // }
+
+                for (csvRecord in csvParser) {
+                    // Parse the records and check for invalid or missing fields
+                    val contract = csvRecord.get(HEADER_CONTRACT) ?: ""
+                    val contractAccount = csvRecord.get(HEADER_CONTRACT_ACCOUNT) ?: ""
+                    if (contract.isEmpty() || contractAccount.isEmpty()) {
+                        Log.e("CsvParser", "Missing required fields in row: $csvRecord")
+                    }
+
+                    val record = ContractRecord(
+                        contract = contract,
+                        contractAccount = contractAccount,
+                        ibcName = csvRecord.get(HEADER_IBC_NAME) ?: "",
+                        portfolio = csvRecord.get(HEADER_PORTFOLIO) ?: "",
+                        cbOffer = csvRecord.get(HEADER_CB_OFFER) ?: "",
+                        rebateOffer = csvRecord.get(HEADER_REBATE_OFFER) ?: "",
+                        pwoScheme = csvRecord.get(HEADER_PWO_SCHEME) ?: ""
+                    )
+                    records.add(record)
+                }
             }
+        } catch (e: Exception) {
+            Log.e("CsvParser", "Error reading CSV: ${e.message}")
         }
-        
+
         return records
     }
+
 }
+
