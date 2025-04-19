@@ -1,73 +1,64 @@
-# Welcome to your Lovable project
 
-## Project info
+# Contract Finder Nexus App
 
-**URL**: https://lovable.dev/projects/a0e87b5d-4b78-4fbb-a4e6-aa4075ad92f7
+A Kotlin-based Android application for searching contract details from CSV data.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- CSV file import with support for 400,000+ rows
+- Fast search functionality by Contract or Contract Account
+- CSV upload feature for data updates
+- Compatible with Android 7.0 (API level 24) and above
+- Efficient handling of large datasets
 
-**Use Lovable**
+## CSV File Format
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/a0e87b5d-4b78-4fbb-a4e6-aa4075ad92f7) and start prompting.
+The application expects a CSV file with the following headers:
+1. Contract
+2. Contract Account
+3. IBCName
+4. Portfolio
+5. CB Offer
+6. Rebate Offer
+7. PWO Scheme
 
-Changes made via Lovable will be committed automatically to this repo.
+## Building the App
 
-**Use your preferred IDE**
+### Prerequisites
+- Android Studio (latest version recommended)
+- JDK 8 or higher
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+### Steps to build
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+1. Clone the repository
+2. Open the project in Android Studio
+3. Wait for Gradle sync to complete
+4. Click on "Build" → "Build Bundle(s) / APK(s)" → "Build APK(s)"
+5. The APK will be generated in the `app/build/outputs/apk/debug/` directory
 
-Follow these steps:
+### Generate Signed APK
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1. In Android Studio, click on "Build" → "Generate Signed Bundle / APK"
+2. Select "APK"
+3. Create or select your keystore file
+4. Fill in the keystore password, key alias, and key password
+5. Select the destination folder and finish
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## Usage
 
-# Step 3: Install the necessary dependencies.
-npm i
+1. Install the application on your Android device (Android 7.0+)
+2. Open the app
+3. Tap the "+" button to import a CSV file
+4. Once imported, use the search bar to find contracts by Contract ID or Contract Account
+5. Results will be displayed in a list
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+## Performance Considerations
 
-**Edit a file directly in GitHub**
+The app is optimized to handle large CSV files (400,000+ rows) by:
+- Using efficient parsing libraries
+- Implementing background threading
+- Using optimized data structures
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Web Demo Version
 
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/a0e87b5d-4b78-4fbb-a4e6-aa4075ad92f7) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+A web-based demo version is also available in this repository for testing purposes.
